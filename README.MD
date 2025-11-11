@@ -30,7 +30,7 @@ Execute `npm run demo` para ver o contraste na pratica (DAO -> Mapper -> Reposit
 #### Opcao com Postgres real
 
 1. Suba um banco (ex.: `docker run --rm -it -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16`).
-2. Crie a tabela executando `psql $DATABASE_URL -f db/schema.sql`.
+2. Crie a tabela executando `psql $DATABASE_URL -f db/schema.sql` (ou, se estiver usando o container acima, `docker exec -it <nome-do-container> psql -U postgres -f /docker-entrypoint-initdb.d/01-schema.sql` depois de copiar o arquivo).
 3. Defina `DATABASE_URL` (padrao: `postgres://postgres:postgres@localhost:5432/design_patterns`).
 4. Rode `npm run demo:repository:pg` para usar o `PostgresCartRepository` (`src/interfaces/cli/demo-postgres.js` + `src/infrastructure/persistence/postgres/**`).
 5. Rode `npm run demo:mapper:pg` para ver o Data Mapper trabalhando diretamente com o Postgres (DAO + mapper sem repository).
@@ -109,7 +109,7 @@ O arquivo `ClassicObserver.js` contem a versao manual do padrao. Os tres exemplo
 
 > Requisitos: Docker + Docker Compose v2.
 
-1. `docker compose up --build` -> sobe app (executando `npm run demo`), Postgres e RabbitMQ. A tabela do carrinho e criada automaticamente via `db/schema.sql`.
+1. `docker compose up --build` -> sobe app (executando `npm run demo`), Postgres e RabbitMQ. A tabela do carrinho e criada automaticamente via `db/schema.sql` (montado como `/docker-entrypoint-initdb.d/01-schema.sql`).
 2. Para executar outro script dentro do container (ex.: demos com Postgres ou notificacoes) rode:  
    `docker compose run --rm app npm run demo:repository:pg`  
    `docker compose run --rm app npm run demo:mapper:pg`  
