@@ -25,7 +25,9 @@ export function createCartEventStream() {
     })),
   );
 
-  return { subject, shippingStream, billingStream };
+  const rawStream = subject.asObservable();
+
+  return { subject, shippingStream, billingStream, rawStream };
 }
 
 export function runRxjsDemo() {

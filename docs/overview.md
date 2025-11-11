@@ -141,9 +141,12 @@ Esses exemplos se alinham com a lista de tecnologias citadas na pergunta (EventE
 | `npm run demo:order:notify` / `make demo-order-notify` | Node + RabbitMQ | Integra decorator de notificacao ao fluxo de pedido e publica mensagens na fila. | `src/interfaces/cli/demo-order-notification.js`, `OrderNotifierDecorator`, clientes Rabbit |
 | `npm run demo:order:full` / `make demo-order-full` | Node + RabbitMQ (+ Postgres opcional) | Demonstra todo o pipeline: agregado DDD, Strategy de frete, Observer (RxJS + Rabbit) e Decorator publicando notificacoes. | `src/interfaces/cli/demo-full-order.js` |
 | `npm run demo:order:interactive` / `make demo-order-interactive` | Node + RabbitMQ (+ Postgres opcional) | CLI interativa em que o usuario informa cliente/itens e acompanha logs do RxJS e mensagens RabbitMQ em tempo real. | `src/interfaces/cli/demo-interactive.js` |
-| `npm run consume:queues` / `make consume-queues` | Node + RabbitMQ | Consumidor que fica ouvindo `order-notifications` e `cart-events`, exibindo as mensagens assim que chegam. | `src/interfaces/cli/consume-queues.js` |
+| `npm run demo:observer:classic` / `make demo-observer-classic` | Node local | Observer classico puro, sem dependencias extras. | `src/interfaces/cli/demo-classic-observer.js`, `ClassicObserver.js` |
+| `npm run demo:observer:pubsub` / `make demo-observer-pubsub` | Node local | Observer generalizado em broker em memoria. | `src/interfaces/cli/demo-pubsub-observer.js`, `PubSubObserver.js` |
 | `npm run demo:observer:rxjs` / `make observer-rxjs` | Node local | Observer -> RxJS. | CLI `src/interfaces/cli/observer-rxjs.js` + `src/patterns/observer/RxjsCartStreamDemo.js` |
 | `npm run demo:observer:rabbit` / `make observer-rabbit` | Node + RabbitMQ | Observer -> Pub/Sub broker real. | CLI `src/interfaces/cli/observer-rabbit.js` + `src/patterns/observer/RabbitMQObserverDemo.js` |
+| `npm run consume:queues` / `make consume-queues` | Node + RabbitMQ | Consumidor que fica ouvindo `order-notifications` e `cart-events`, exibindo as mensagens assim que chegam. | `src/interfaces/cli/consume-queues.js` |
+| `npm run consume:rxjs` / `make consume-rxjs` | Node + RabbitMQ | Consumidor da fila `rxjs-logs`, exibindo os observers em tempo real. | `src/interfaces/cli/consume-rxjs-logs.js` |
 | `docker compose up --build` / `make docker-up` | Docker | Sobe app, Postgres e RabbitMQ; roda `npm run demo`. | `Dockerfile`, `docker-compose.yml` |
 | `docker compose run --rm app <script>` / `make docker-*` | Docker | Executa qualquer script dentro do container, reaproveitando os servicos (env `DATABASE_URL`, `RABBITMQ_URL`). | Mesmo que acima |
 
