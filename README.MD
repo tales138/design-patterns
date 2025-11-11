@@ -27,6 +27,13 @@ npm run demo  # demonstra DAO vs Mapper vs Repository
 
 Execute `npm run demo` para ver o contraste na pratica (DAO -> Mapper -> Repository usando o mesmo carrinho).
 
+#### Opcao com Postgres real
+
+1. Suba um banco (ex.: `docker run --rm -it -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16`).
+2. Crie a tabela executando `psql $DATABASE_URL -f db/schema.sql`.
+3. Defina `DATABASE_URL` (padrao: `postgres://postgres:postgres@localhost:5432/design_patterns`).
+4. Rode `npm run demo:repository:pg` para usar o `PostgresCartRepository` (`src/interfaces/cli/demo-postgres.js` + `src/infrastructure/persistence/postgres/**`).
+
 ### c) Agregado e invariantes
 
 - Agregado: `ShoppingCart` (`src/domain/cart/ShoppingCart.js`) agrupa `CartItem`s e mantem regras como **maximo de 50 unidades** e **limite de credito do cliente**.
@@ -83,13 +90,24 @@ O arquivo `ClassicObserver.js` contem a versao manual do padrao. Os tres exemplo
 
 - **Domain**: `src/domain/cart` (agregado, invariantes, eventos).
 - **Application**: `src/application/use-cases/AddItemToCart.js`.
-- **Infrastructure**: `src/infrastructure/persistence/**` com DAO, Mapper e Repository.
-- **Interfaces**: `src/interfaces/cli/demo.js` orquestra o caso de uso.
+- **Infrastructure**: `src/infrastructure/persistence/**` com DAO, Mapper e Repository (in-memory) e `src/infrastructure/persistence/postgres/**` para Postgres real.
+- **Interfaces**: `src/interfaces/cli/demo.js` (in-memory) e `src/interfaces/cli/demo-postgres.js` (Postgres) orquestram o caso de uso.
 - **Patterns**: `src/patterns/**` guarda as respostas dos itens 2, 3 e 4.
 
-### Demos Observer com bibliotecas reais
+### Demos adicionais
 
 - `npm run demo:observer:rxjs` -> usa um `Subject` do RxJS em `src/patterns/observer/RxjsCartStreamDemo.js`.
 - `npm run demo:observer:rabbit` -> publica e consome eventos via RabbitMQ com `amqplib` (`src/patterns/observer/RabbitMQObserverDemo.js`). Requer um broker local (ex.: `docker run -it --rm -p 5672:5672 rabbitmq:3`).
+- `npm run demo:repository:pg` -> persiste o agregado no Postgres usando `PostgresCartRepository`.
+
+### Rodando com Docker Compose
+
+> Requisitos: Docker + Docker Compose v2.
+
+1. `docker compose up --build` -> sobe app (executando `npm run demo`), Postgres e RabbitMQ. A tabela do carrinho e criada automaticamente via `db/schema.sql`.
+2. Para executar outro script dentro do container (ex.: demo com Postgres real) rode:  
+   `docker compose run --rm app npm run demo:repository:pg`
+3. Demos de observer tambem podem ser chamados via `docker compose run --rm app npm run demo:observer:rxjs` ou `...demo:observer:rabbit` usando os servicos do compose (`RABBITMQ_URL=amqp://rabbitmq`).
+4. Para encerrar e liberar recursos: `docker compose down -v`.
 
 Com isso, o mesmo caso de uso (pedido/carrinho) e utilizado para todas as comparacoes solicitadas.

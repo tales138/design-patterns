@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "demo": "node ./src/interfaces/cli/demo.js",
+    "demo:repository:pg": "node ./src/interfaces/cli/demo-postgres.js",
     "demo:observer:rxjs": "node ./src/patterns/observer/RxjsCartStreamDemo.js",
     "demo:observer:rabbit": "node ./src/patterns/observer/RabbitMQObserverDemo.js"
   },
@@ -15,6 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "amqplib": "^0.10.3",
+    "pg": "^8.12.0",
     "rxjs": "^7.8.1"
   }
 }

@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    command: npm run demo
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/design_patterns
+      RABBITMQ_URL: amqp://rabbitmq
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: design_patterns
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+
+  rabbitmq:
+    image: rabbitmq:3
+    ports:
+      - "5672:5672"
+
+volumes:
+  postgres-data:
