@@ -30,7 +30,7 @@ Execute `npm run demo` para ver o contraste na pratica (DAO -> Mapper -> Reposit
 #### Opcao com Postgres real
 
 1. Suba um banco (ex.: `docker run --rm -it -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:16`).
-2. Crie a tabela executando `psql $DATABASE_URL -f db/schema.sql`.
+2. Crie a tabela executando `psql $DATABASE_URL -f db/schema.sql` (ou, se estiver usando o container acima, `docker exec -it <nome-do-container> psql -U postgres -f /docker-entrypoint-initdb.d/01-schema.sql` depois de copiar o arquivo).
 3. Defina `DATABASE_URL` (padrao: `postgres://postgres:postgres@localhost:5432/design_patterns`).
 4. Rode `npm run demo:repository:pg` para usar o `PostgresCartRepository` (`src/interfaces/cli/demo-postgres.js` + `src/infrastructure/persistence/postgres/**`).
 5. Rode `npm run demo:mapper:pg` para ver o Data Mapper trabalhando diretamente com o Postgres (DAO + mapper sem repository).
@@ -104,17 +104,21 @@ O arquivo `ClassicObserver.js` contem a versao manual do padrao. Os tres exemplo
 - `npm run demo:strategy` -> compara o calculo de frete com if/else e com Strategy (`src/interfaces/cli/demo-strategy.js`).
 - `npm run demo:order:notify` -> integra o decorator de notificacao com a criacao do pedido e publica cada canal em uma fila RabbitMQ (`order-notifications` por padrao). Configure `RABBITMQ_URL`/`ORDER_NOTIFICATION_QUEUE` ou use o `docker compose up` (ou `docker run -it --rm -p 5672:5672 rabbitmq:3`).
 - `npm run demo:order:full` -> demonstra o processo completo: repositorio (in-memory ou Postgres), Strategy de frete, Observer (RxJS + RabbitMQ) e Decorator publicando notificacoes no RabbitMQ. Ajuste `USE_POSTGRES=true` para trocar o backend do carrinho e `CART_EVENTS_QUEUE`/`ORDER_NOTIFICATION_QUEUE` para personalizar filas.
+- `npm run demo:order:interactive` -> CLI interativa que coleta os dados do pedido (cliente, itens, destino), pergunta se deve usar Postgres, executa todo o pipeline e exibe os logs do RxJS e das publicacoes RabbitMQ diretamente no terminal. Use RabbitMQ ativo (`docker compose up` ou `docker run … rabbitmq:3`); opcionalmente defina `USE_POSTGRES=true` para salvar o carrinho no banco.
+- `npm run consume:queues` -> consumidor simples que escuta as filas `order-notifications` e `cart-events` do RabbitMQ e imprime as mensagens conforme chegam. Ideal para acompanhar os pushs enviados pelos demos.
 
 ### Rodando com Docker Compose
 
 > Requisitos: Docker + Docker Compose v2.
 
-1. `docker compose up --build` -> sobe app (executando `npm run demo`), Postgres e RabbitMQ. A tabela do carrinho e criada automaticamente via `db/schema.sql`.
+1. `docker compose up --build` -> sobe app (executando `npm run demo`), Postgres e RabbitMQ. A tabela do carrinho e criada automaticamente via `db/schema.sql` (montado como `/docker-entrypoint-initdb.d/01-schema.sql`).
 2. Para executar outro script dentro do container (ex.: demos com Postgres ou notificacoes) rode:  
    `docker compose run --rm app npm run demo:repository:pg`  
    `docker compose run --rm app npm run demo:mapper:pg`  
    `docker compose run --rm app npm run demo:order:notify`  
-   `docker compose run --rm app npm run demo:order:full`
+   `docker compose run --rm app npm run demo:order:full`  
+   `docker compose run --rm app npm run demo:order:interactive`  
+   `docker compose run --rm app npm run consume:queues`
 3. Demos de observer tambem podem ser chamados via `docker compose run --rm app npm run demo:observer:rxjs` ou `...demo:observer:rabbit` usando os servicos do compose (`RABBITMQ_URL=amqp://rabbitmq`).
 4. Para encerrar e liberar recursos: `docker compose down -v`.
 

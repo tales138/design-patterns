@@ -16,6 +16,7 @@ const CUSTOMER_ID = "full-demo-customer";
 const NOTIFICATION_QUEUE = process.env.ORDER_NOTIFICATION_QUEUE ?? "order-notifications";
 const CART_EVENTS_QUEUE = process.env.CART_EVENTS_QUEUE ?? "cart-events";
 
+// Helper para alternar entre Postgres e memoria via env
 async function buildRepository() {
   if (process.env.USE_POSTGRES === "true") {
     const pool = getPostgresPool();
