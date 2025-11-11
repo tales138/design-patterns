@@ -12,6 +12,7 @@
     "demo:order:full": "node ./src/interfaces/cli/demo-full-order.js",
     "demo:order:interactive": "node ./src/interfaces/cli/demo-interactive.js",
     "consume:queues": "node ./src/interfaces/cli/consume-queues.js",
+    "consume:rxjs": "node ./src/interfaces/cli/consume-rxjs-logs.js",
     "demo:observer:rxjs": "node ./src/interfaces/cli/observer-rxjs.js",
     "demo:observer:rabbit": "node ./src/interfaces/cli/observer-rabbit.js"
   },

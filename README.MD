@@ -106,6 +106,7 @@ O arquivo `ClassicObserver.js` contem a versao manual do padrao. Os tres exemplo
 - `npm run demo:order:full` -> demonstra o processo completo: repositorio (in-memory ou Postgres), Strategy de frete, Observer (RxJS + RabbitMQ) e Decorator publicando notificacoes no RabbitMQ. Ajuste `USE_POSTGRES=true` para trocar o backend do carrinho e `CART_EVENTS_QUEUE`/`ORDER_NOTIFICATION_QUEUE` para personalizar filas.
 - `npm run demo:order:interactive` -> CLI interativa que coleta os dados do pedido (cliente, itens, destino), pergunta se deve usar Postgres, executa todo o pipeline e exibe os logs do RxJS e das publicacoes RabbitMQ diretamente no terminal. Use RabbitMQ ativo (`docker compose up` ou `docker run … rabbitmq:3`); opcionalmente defina `USE_POSTGRES=true` para salvar o carrinho no banco.
 - `npm run consume:queues` -> consumidor simples que escuta as filas `order-notifications` e `cart-events` do RabbitMQ e imprime as mensagens conforme chegam. Ideal para acompanhar os pushs enviados pelos demos.
+- `npm run consume:rxjs` -> consumidor separado para a fila de logs do RxJS (`rxjs-logs` por padrao, configuravel via `RXJS_LOG_QUEUE`), permitindo acompanhar os observers em um terminal dedicado.
 
 ### Rodando com Docker Compose
 
@@ -118,7 +119,8 @@ O arquivo `ClassicObserver.js` contem a versao manual do padrao. Os tres exemplo
    `docker compose run --rm app npm run demo:order:notify`  
    `docker compose run --rm app npm run demo:order:full`  
    `docker compose run --rm app npm run demo:order:interactive`  
-   `docker compose run --rm app npm run consume:queues`
+   `docker compose run --rm app npm run consume:queues`  
+   `docker compose run --rm app npm run consume:rxjs`
 3. Demos de observer tambem podem ser chamados via `docker compose run --rm app npm run demo:observer:rxjs` ou `...demo:observer:rabbit` usando os servicos do compose (`RABBITMQ_URL=amqp://rabbitmq`).
 4. Para encerrar e liberar recursos: `docker compose down -v`.
 

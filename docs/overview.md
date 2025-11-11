@@ -160,6 +160,7 @@ Todos os comandos podem ser chamados diretamente via CLI ou encapsulados com o `
   - `RABBITMQ_URL` (default: `amqp://localhost`, alterado para `amqp://rabbitmq` no docker-compose).  
   - `ORDER_NOTIFICATION_QUEUE` (default: `order-notifications`) define a fila onde o decorator publica mensagens.  
   - `CART_EVENTS_QUEUE` (default: `cart-events`) guarda os eventos de dominio enviados pelo demo completo.  
+  - `RXJS_LOG_QUEUE` (default: `rxjs-logs`) recebe os logs do fluxo RxJS emitidos pelo demo interativo.  
   - `PGSSL` para habilitar SSL em ambientes gerenciados.  
 - **Docker Compose**: aplica `db/schema.sql` automaticamente (montado em `/docker-entrypoint-initdb.d/`) e expoe portas padrao (5432, 5672). O container `app` ja vem com as variaveis configuradas.
 

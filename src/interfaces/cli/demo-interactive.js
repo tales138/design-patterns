@@ -16,6 +16,7 @@ import { getRabbitMQChannel, closeRabbitMQ } from "../../shared/messaging/rabbit
 
 const NOTIFICATION_QUEUE = process.env.ORDER_NOTIFICATION_QUEUE ?? "order-notifications";
 const CART_EVENTS_QUEUE = process.env.CART_EVENTS_QUEUE ?? "cart-events";
+const RXJS_LOG_QUEUE = process.env.RXJS_LOG_QUEUE ?? "rxjs-logs";
 
 // Utilidades simples para interagir com o usuario e garantir defaults
 async function askYesNo(rl, question, defaultValue = false) {
@@ -149,8 +150,10 @@ async function main() {
     const channel = await getRabbitMQChannel();
     await channel.assertQueue(NOTIFICATION_QUEUE, { durable: false });
     await channel.assertQueue(CART_EVENTS_QUEUE, { durable: false });
+    await channel.assertQueue(RXJS_LOG_QUEUE, { durable: false });
     await channel.purgeQueue(NOTIFICATION_QUEUE);
     await channel.purgeQueue(CART_EVENTS_QUEUE);
+    await channel.purgeQueue(RXJS_LOG_QUEUE);
 
     const notifier = buildNotifier({
       email: new RabbitNotificationClient(channel, { queue: NOTIFICATION_QUEUE, channelType: "email" }),
@@ -171,6 +174,18 @@ async function main() {
     while ((msg = await channel.get(CART_EVENTS_QUEUE, { noAck: true }))) {
       eventMessages.push(JSON.parse(msg.content.toString()));
     }
+
+    rxLogs.forEach((line) =>
+      channel.sendToQueue(
+        RXJS_LOG_QUEUE,
+        Buffer.from(
+          JSON.stringify({
+            log: line,
+            emittedAt: new Date().toISOString(),
+          }),
+        ),
+      ),
+    );
 
     console.log("\n=== Logs RxJS ===");
     rxLogs.forEach((logLine) => console.log(logLine));
