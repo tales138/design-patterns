@@ -1,6 +1,6 @@
 SHELL := /bin/sh
 
-.PHONY: install demo demo-pg demo-mapper-pg demo-strategy demo-order-notify demo-order-full observer-rxjs observer-rabbit docker-up docker-down docker-demo docker-demo-pg docker-demo-mapper-pg docker-demo-strategy docker-demo-order-notify docker-demo-order-full docker-observer-rabbit docker-observer-rxjs
+.PHONY: install demo demo-pg demo-mapper-pg demo-strategy demo-order-notify demo-order-full demo-order-interactive consume-queues observer-rxjs observer-rabbit docker-up docker-down docker-demo docker-demo-pg docker-demo-mapper-pg docker-demo-strategy docker-demo-order-notify docker-demo-order-full docker-demo-order-interactive docker-consume-queues docker-observer-rabbit docker-observer-rxjs
 
 install:
 	npm install
@@ -23,6 +23,11 @@ demo-order-notify:
 demo-order-full:
 	npm run demo:order:full
 
+demo-order-interactive:
+	npm run demo:order:interactive
+
+consume-queues:
+	npm run consume:queues
 observer-rxjs:
 	npm run demo:observer:rxjs
 
@@ -52,6 +57,12 @@ docker-demo-order-notify:
 
 docker-demo-order-full:
 	docker compose run --rm app npm run demo:order:full
+
+docker-demo-order-interactive:
+	docker compose run --rm app npm run demo:order:interactive
+
+docker-consume-queues:
+	docker compose run --rm app npm run consume:queues
 
 docker-observer-rxjs:
 	docker compose run --rm app npm run demo:observer:rxjs

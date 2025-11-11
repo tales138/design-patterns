@@ -6,6 +6,7 @@ export class RabbitNotificationClient {
   }
 
   send(message) {
+    // Cada mensagem leva metadados minimos para identificar o canal e horario
     const payload = {
       channel: this.channelType,
       sentAt: new Date().toISOString(),
