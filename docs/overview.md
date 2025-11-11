@@ -16,18 +16,18 @@ Este overview detalha como cada requisito do questionario foi atendido, quais de
 
 3. **Domain**  
    - `ShoppingCart` encapsula invariantes (max 50 unidades, limite de credito, mescla de itens iguais) e gera eventos `CartItemAdded`.  
-   - `CartItem` valida dados criticos e provê metodos de apoio (`total`, `mergeQuantity`).
+   - `CartItem` valida dados criticos e prove metodos de apoio (`total`, `mergeQuantity`).
 
 4. **Infrastructure**  
    - DAO/Mapper/Repository em memoria (`src/infrastructure/persistence/**`).  
-   - Adaptador IDêntico para Postgres (`src/infrastructure/persistence/postgres/**`) usando `pg`.  
+   - Adaptador IDentico para Postgres (`src/infrastructure/persistence/postgres/**`) usando `pg`.  
    - `src/shared/database/postgresPool.js` garante pool unico e reaproveitavel.
 
 Essa separacao permite alternar mecanismos de persistencia e demonstra como DDD facilita a comparacao entre padroes.
 
 ---
 
-## Questao 1 – DAO vs Data Mapper vs Repository
+## Questao 1  DAO vs Data Mapper vs Repository
 
 ### Implementacao
 
@@ -66,7 +66,7 @@ Conclusao: o mesmo caso de uso ilustra claramente a diferenca entre operacoes CR
 
 ---
 
-## Questao 2 – Refatoracoes (Kerievsky)
+## Questao 2  Refatoracoes (Kerievsky)
 
 ### Replace Conditional with Polymorphism -> Strategy
 
@@ -82,17 +82,19 @@ Demo associado: `src/interfaces/cli/demo-strategy.js` (`npm run demo:strategy`) 
 ### Move Embellishment to Decorator -> Decorator
 
 - **Antes**: `src/patterns/decorator/LegacyOrderNotifier.js` cuidava de email, SMS e push. Habilitar/desabilitar canais exigia varios `if`s e parametro de configuracao complexo.  
-- **Depois**: `src/patterns/decorator/OrderNotifierDecorator.js` cria `OrderNotifier` abstrato, `BaseNotifier` e decorators especificos (`EmailNotifier`, `SmsNotifier`, `PushNotifier`). `buildNotifier` compõe dinamicamente os canais.  
+- **Depois**: `src/patterns/decorator/OrderNotifierDecorator.js` cria `OrderNotifier` abstrato, `BaseNotifier` e decorators especificos (`EmailNotifier`, `SmsNotifier`, `PushNotifier`). `buildNotifier` compoe dinamicamente os canais.  
 - **Resultado**:  
   - cada canal pode ser ligado/desligado por composicao;  
   - open/closed principle: novos canais nao alteram o codigo existente;  
   - facilita extensoes (ex.: decorator que registra auditoria).
 
+Demo associado: `src/interfaces/cli/demo-order-notification.js` (`npm run demo:order:notify`) reaproveita o caso de uso do carrinho para gerar um pedido e publica as notificacoes dos canais (email/SMS/push) em uma fila RabbitMQ real, mostrando o decorator integrado a um processo de criacao de pedido.
+
 Ambas refatoracoes usam o mesmo contexto do pedido do carrinho, ligando o desafio teorico com o dominio da aplicacao.
 
 ---
 
-## Questao 3 – Criticas a Padroes GoF em Desuso
+## Questao 3  Criticas a Padroes GoF em Desuso
 
 Implementacoes em `src/patterns/gof/Criticisms.js`:
 
@@ -101,7 +103,7 @@ Implementacoes em `src/patterns/gof/Criticisms.js`:
    - `CartService` com injecao via construtor mostra a alternativa moderna (DI/IoC). Facilita multiplas instancias e testes isolados.
 
 2. **Abstract Factory**  
-   - Exemplo tradicional `ShippingGatewayFactory` exige uma classe inteira para apenas escolher entre “fast” e “cheap”.  
+   - Exemplo tradicional `ShippingGatewayFactory` exige uma classe inteira para apenas escolher entre fast e cheap.  
    - Solucao moderna `buildShippingGateway` usa um mapa de funcoes, alavancando os recursos da linguagem e frameworks DI. Menos verbosidade e menor risco de overengineering.
 
 3. **Prototype**  
@@ -112,7 +114,7 @@ Assim, cada critica teorica e sustentada com codigo pratico ligado ao dominio.
 
 ---
 
-## Questao 4 – Observer em Tecnologias Modernas
+## Questao 4  Observer em Tecnologias Modernas
 
 Objetivo: mostrar que Observer classico e a base para Pub/Sub, reatividade e arquiteturas orientadas a eventos.
 
@@ -136,6 +138,8 @@ Esses exemplos se alinham com a lista de tecnologias citadas na pergunta (EventE
 | `npm run demo:repository:pg` / `make demo-pg` | Node + Postgres | Persistencia real com `pg`, usando o mesmo agregado. | `src/interfaces/cli/demo-postgres.js`, `postgres/*.js` |
 | `npm run demo:mapper:pg` / `make demo-mapper-pg` | Node + Postgres | Demonstra Data Mapper + DAO Postgres sem repository. | `src/interfaces/cli/demo-data-mapper-pg.js`, `CartDataMapper`, `PostgresCartDAO` |
 | `npm run demo:strategy` / `make demo-strategy` | Node local | Compara if/else legado com Strategy no calculo de frete. | `src/interfaces/cli/demo-strategy.js`, `src/patterns/strategy/*` |
+| `npm run demo:order:notify` / `make demo-order-notify` | Node + RabbitMQ | Integra decorator de notificacao ao fluxo de pedido e publica mensagens na fila. | `src/interfaces/cli/demo-order-notification.js`, `OrderNotifierDecorator`, clientes Rabbit |
+| `npm run demo:order:full` / `make demo-order-full` | Node + RabbitMQ (+ Postgres opcional) | Demonstra todo o pipeline: agregado DDD, Strategy de frete, Observer (RxJS + Rabbit) e Decorator publicando notificacoes. | `src/interfaces/cli/demo-full-order.js` |
 | `npm run demo:observer:rxjs` / `make observer-rxjs` | Node local | Observer -> RxJS. | CLI `src/interfaces/cli/observer-rxjs.js` + `src/patterns/observer/RxjsCartStreamDemo.js` |
 | `npm run demo:observer:rabbit` / `make observer-rabbit` | Node + RabbitMQ | Observer -> Pub/Sub broker real. | CLI `src/interfaces/cli/observer-rabbit.js` + `src/patterns/observer/RabbitMQObserverDemo.js` |
 | `docker compose up --build` / `make docker-up` | Docker | Sobe app, Postgres e RabbitMQ; roda `npm run demo`. | `Dockerfile`, `docker-compose.yml` |
@@ -152,8 +156,10 @@ Todos os comandos podem ser chamados diretamente via CLI ou encapsulados com o `
 - **Variaveis**:  
   - `DATABASE_URL` (default: `postgres://postgres:postgres@localhost:5432/design_patterns`).  
   - `RABBITMQ_URL` (default: `amqp://localhost`, alterado para `amqp://rabbitmq` no docker-compose).  
+  - `ORDER_NOTIFICATION_QUEUE` (default: `order-notifications`) define a fila onde o decorator publica mensagens.  
+  - `CART_EVENTS_QUEUE` (default: `cart-events`) guarda os eventos de dominio enviados pelo demo completo.  
   - `PGSSL` para habilitar SSL em ambientes gerenciados.  
-- **Docker Compose**: aplica `db/schema.sql` automaticamente (montado em `/docker-entrypoint-initdb.d/`) e expõe portas padrao (5432, 5672). O container `app` já vem com as variaveis configuradas.
+- **Docker Compose**: aplica `db/schema.sql` automaticamente (montado em `/docker-entrypoint-initdb.d/`) e expoe portas padrao (5432, 5672). O container `app` ja vem com as variaveis configuradas.
 
 ---
 
@@ -166,4 +172,4 @@ Todos os comandos podem ser chamados diretamente via CLI ou encapsulados com o `
 
 ---
 
-Graças a essas implementacoes, o projeto cobre todas as perguntas: comparacoes DAO/Mapper/Repository e agregados DDD, refatoracoes Strategy/Decorator, criticas a padroes GoF antiquados e demonstracoes do Observer em tecnologias modernas, tudo usando o mesmo dominio de carrinho de compras e reproduzivel via CLI, Docker ou Makefile.
+Gracas a essas implementacoes, o projeto cobre todas as perguntas: comparacoes DAO/Mapper/Repository e agregados DDD, refatoracoes Strategy/Decorator, criticas a padroes GoF antiquados e demonstracoes do Observer em tecnologias modernas, tudo usando o mesmo dominio de carrinho de compras e reproduzivel via CLI, Docker ou Makefile.

@@ -8,6 +8,8 @@
     "demo:repository:pg": "node ./src/interfaces/cli/demo-postgres.js",
     "demo:mapper:pg": "node ./src/interfaces/cli/demo-data-mapper-pg.js",
     "demo:strategy": "node ./src/interfaces/cli/demo-strategy.js",
+    "demo:order:notify": "node ./src/interfaces/cli/demo-order-notification.js",
+    "demo:order:full": "node ./src/interfaces/cli/demo-full-order.js",
     "demo:observer:rxjs": "node ./src/interfaces/cli/observer-rxjs.js",
     "demo:observer:rabbit": "node ./src/interfaces/cli/observer-rabbit.js"
   },

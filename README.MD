@@ -102,14 +102,19 @@ O arquivo `ClassicObserver.js` contem a versao manual do padrao. Os tres exemplo
 - `npm run demo:repository:pg` -> persiste o agregado no Postgres usando `PostgresCartRepository`.
 - `npm run demo:mapper:pg` -> usa o `CartDataMapper` diretamente com o DAO Postgres, sem repository, para reforcar o item 1.
 - `npm run demo:strategy` -> compara o calculo de frete com if/else e com Strategy (`src/interfaces/cli/demo-strategy.js`).
+- `npm run demo:order:notify` -> integra o decorator de notificacao com a criacao do pedido e publica cada canal em uma fila RabbitMQ (`order-notifications` por padrao). Configure `RABBITMQ_URL`/`ORDER_NOTIFICATION_QUEUE` ou use o `docker compose up` (ou `docker run -it --rm -p 5672:5672 rabbitmq:3`).
+- `npm run demo:order:full` -> demonstra o processo completo: repositorio (in-memory ou Postgres), Strategy de frete, Observer (RxJS + RabbitMQ) e Decorator publicando notificacoes no RabbitMQ. Ajuste `USE_POSTGRES=true` para trocar o backend do carrinho e `CART_EVENTS_QUEUE`/`ORDER_NOTIFICATION_QUEUE` para personalizar filas.
 
 ### Rodando com Docker Compose
 
 > Requisitos: Docker + Docker Compose v2.
 
 1. `docker compose up --build` -> sobe app (executando `npm run demo`), Postgres e RabbitMQ. A tabela do carrinho e criada automaticamente via `db/schema.sql`.
-2. Para executar outro script dentro do container (ex.: demo com Postgres real) rode:  
-   `docker compose run --rm app npm run demo:repository:pg`
+2. Para executar outro script dentro do container (ex.: demos com Postgres ou notificacoes) rode:  
+   `docker compose run --rm app npm run demo:repository:pg`  
+   `docker compose run --rm app npm run demo:mapper:pg`  
+   `docker compose run --rm app npm run demo:order:notify`  
+   `docker compose run --rm app npm run demo:order:full`
 3. Demos de observer tambem podem ser chamados via `docker compose run --rm app npm run demo:observer:rxjs` ou `...demo:observer:rabbit` usando os servicos do compose (`RABBITMQ_URL=amqp://rabbitmq`).
 4. Para encerrar e liberar recursos: `docker compose down -v`.
 
