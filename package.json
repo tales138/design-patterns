@@ -1,0 +1,20 @@
+{
+  "name": "design-patterns-cart",
+  "version": "1.0.0",
+  "description": "Demonstracao em Node.js de padroes de projeto usando um caso de carrinho de compras baseado em DDD.",
+  "type": "module",
+  "scripts": {
+    "demo": "node ./src/interfaces/cli/demo.js",
+    "demo:observer:rxjs": "node ./src/patterns/observer/RxjsCartStreamDemo.js",
+    "demo:observer:rabbit": "node ./src/patterns/observer/RabbitMQObserverDemo.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "rxjs": "^7.8.1"
+  }
+}
