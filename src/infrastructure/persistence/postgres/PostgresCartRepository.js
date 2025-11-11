@@ -10,6 +10,7 @@ export class PostgresCartRepository {
   async getById(cartId, customerId) {
     const rows = await this.dao.findByCart(cartId);
     if (!rows.length) {
+      // Consistente com o repositorio em memoria: devolve agregado vazio pronto para uso
       return new ShoppingCart({ cartId, customerId, items: [] });
     }
     return this.mapper.toDomain(cartId, customerId, rows);
@@ -20,6 +21,7 @@ export class PostgresCartRepository {
       throw new Error("Repository so aceita agregados do tipo ShoppingCart.");
     }
     const rows = this.mapper.toRows(cart);
+    // Persiste o agregado como unidade completa via transacao
     await this.dao.replaceCartItems(cart.cartId, rows);
     return cart;
   }

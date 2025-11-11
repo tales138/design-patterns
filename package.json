@@ -6,8 +6,10 @@
   "scripts": {
     "demo": "node ./src/interfaces/cli/demo.js",
     "demo:repository:pg": "node ./src/interfaces/cli/demo-postgres.js",
-    "demo:observer:rxjs": "node ./src/patterns/observer/RxjsCartStreamDemo.js",
-    "demo:observer:rabbit": "node ./src/patterns/observer/RabbitMQObserverDemo.js"
+    "demo:mapper:pg": "node ./src/interfaces/cli/demo-data-mapper-pg.js",
+    "demo:strategy": "node ./src/interfaces/cli/demo-strategy.js",
+    "demo:observer:rxjs": "node ./src/interfaces/cli/observer-rxjs.js",
+    "demo:observer:rabbit": "node ./src/interfaces/cli/observer-rabbit.js"
   },
   "engines": {
     "node": ">=18"

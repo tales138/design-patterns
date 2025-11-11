@@ -9,6 +9,7 @@ async function main() {
   const repository = new PostgresCartRepository({ dao });
   const addItemToCart = new AddItemToCart(repository);
 
+  // Mesmo caso de uso, mas agora persistindo no banco real
   await addItemToCart.execute({
     cartId: "pg-cart-01",
     customerId: "customer-pg",

@@ -9,6 +9,7 @@ export function createCartEventStream() {
   const subject = new Subject();
 
   const shippingStream = subject.pipe(
+    // Rotas de entrega reagem somente a eventos ITEM_ADDED
     filter((event) => event.type === "ITEM_ADDED"),
     map((event) => ({
       ...event,
@@ -30,6 +31,7 @@ export function createCartEventStream() {
 export function runRxjsDemo() {
   const { subject, shippingStream, billingStream } = createCartEventStream();
 
+  // Logs simulam observers separados consumindo o mesmo Subject
   const shippingSubscription = shippingStream.subscribe((event) => {
     console.log("[RxJS][Shipping]", event.message);
   });
@@ -46,8 +48,4 @@ export function runRxjsDemo() {
     billingSubscription.unsubscribe();
     subject.complete();
   }, 1000);
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  runRxjsDemo();
 }

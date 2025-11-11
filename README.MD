@@ -33,6 +33,7 @@ Execute `npm run demo` para ver o contraste na pratica (DAO -> Mapper -> Reposit
 2. Crie a tabela executando `psql $DATABASE_URL -f db/schema.sql`.
 3. Defina `DATABASE_URL` (padrao: `postgres://postgres:postgres@localhost:5432/design_patterns`).
 4. Rode `npm run demo:repository:pg` para usar o `PostgresCartRepository` (`src/interfaces/cli/demo-postgres.js` + `src/infrastructure/persistence/postgres/**`).
+5. Rode `npm run demo:mapper:pg` para ver o Data Mapper trabalhando diretamente com o Postgres (DAO + mapper sem repository).
 
 ### c) Agregado e invariantes
 
@@ -96,9 +97,11 @@ O arquivo `ClassicObserver.js` contem a versao manual do padrao. Os tres exemplo
 
 ### Demos adicionais
 
-- `npm run demo:observer:rxjs` -> usa um `Subject` do RxJS em `src/patterns/observer/RxjsCartStreamDemo.js`.
-- `npm run demo:observer:rabbit` -> publica e consome eventos via RabbitMQ com `amqplib` (`src/patterns/observer/RabbitMQObserverDemo.js`). Requer um broker local (ex.: `docker run -it --rm -p 5672:5672 rabbitmq:3`).
+- `npm run demo:observer:rxjs` -> CLI `src/interfaces/cli/observer-rxjs.js` chama o fluxo RxJS definido em `src/patterns/observer/RxjsCartStreamDemo.js`.
+- `npm run demo:observer:rabbit` -> CLI `src/interfaces/cli/observer-rabbit.js` executa o demo com RabbitMQ (`src/patterns/observer/RabbitMQObserverDemo.js`). Requer um broker local (ex.: `docker run -it --rm -p 5672:5672 rabbitmq:3`).
 - `npm run demo:repository:pg` -> persiste o agregado no Postgres usando `PostgresCartRepository`.
+- `npm run demo:mapper:pg` -> usa o `CartDataMapper` diretamente com o DAO Postgres, sem repository, para reforcar o item 1.
+- `npm run demo:strategy` -> compara o calculo de frete com if/else e com Strategy (`src/interfaces/cli/demo-strategy.js`).
 
 ### Rodando com Docker Compose
 

@@ -34,6 +34,7 @@ export async function runRabbitObserverDemo() {
     { noAck: false },
   );
 
+  // Producer envia um evento representando a mudanca no agregado
   const event = { type: "ITEM_ADDED", payload: { cartId: "cart-queue", productId: "tea", quantity: 1 } };
   channel.sendToQueue(QUEUE, Buffer.from(JSON.stringify(event)));
   console.log("[RabbitMQ][Producer] Evento enviado:", event);
@@ -42,11 +43,4 @@ export async function runRabbitObserverDemo() {
     await channel.close();
     await connection.close();
   }, 1500);
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  runRabbitObserverDemo().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
 }

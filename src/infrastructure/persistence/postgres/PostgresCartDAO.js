@@ -7,6 +7,7 @@ export class PostgresCartDAO {
   }
 
   async findByCart(cartId) {
+    // Busca linha a linha no banco e normaliza nomes de colunas para o dominio
     const { rows } = await this.pool.query(
       `
         SELECT product_id AS "productId", quantity, unit_price AS "unitPrice"
@@ -26,6 +27,7 @@ export class PostgresCartDAO {
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
+      // Remove o carrinho inteiro para reaplicar o agregado completo
       await client.query("DELETE FROM cart_items WHERE cart_id = $1", [cartId]);
       for (const row of rows) {
         await client.query(

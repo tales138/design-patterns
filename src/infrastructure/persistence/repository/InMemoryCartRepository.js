@@ -9,6 +9,7 @@ export class InMemoryCartRepository {
   constructor({ dao = new InMemoryCartDAO(), mapper = new CartDataMapper() } = {}) {
     this.dao = dao;
     this.mapper = mapper;
+    // Cache simples para evitar remontar o agregado em chamadas subsequentes
     this.aggregates = new Map();
   }
 

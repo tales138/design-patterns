@@ -59,6 +59,7 @@ Essa separacao permite alternar mecanismos de persistencia e demonstra como DDD 
 - `PostgresCartRepository` reaproveita o `CartDataMapper`, provando que o padrao repository isola detalhes de armazenamento.  
 - `db/schema.sql` registra a definicao da tabela.  
 - `src/interfaces/cli/demo-postgres.js` + script `npm run demo:repository:pg` exibem o mesmo fluxo usando Postgres.  
+- `src/interfaces/cli/demo-data-mapper-pg.js` + `npm run demo:mapper:pg` demonstram o Data Mapper ligado diretamente ao DAO Postgres (sem repository), reforcando o item 1.b.  
 - Variavel `DATABASE_URL` controla a conexao; docker-compose sobe Postgres com schema aplicado automaticamente.
 
 Conclusao: o mesmo caso de uso ilustra claramente a diferenca entre operacoes CRUD (DAO), traducao objeto-DB (Mapper) e agregados completos (Repository) conforme descrito por Eric Evans.
@@ -75,6 +76,8 @@ Conclusao: o mesmo caso de uso ilustra claramente a diferenca entre operacoes CR
   - adicionar nova regra = criar nova classe sem tocar nas demais;  
   - cada estrategia tem unica responsabilidade;  
   - fica simples aplicar testes unitarios e injetar estrategias personalizadas.
+
+Demo associado: `src/interfaces/cli/demo-strategy.js` (`npm run demo:strategy`) imprime o custo calculado pelo codigo legado versus o Strategy para diferentes pedidos, evidenciando o ganho da refatoracao.
 
 ### Move Embellishment to Decorator -> Decorator
 
@@ -131,8 +134,10 @@ Esses exemplos se alinham com a lista de tecnologias citadas na pergunta (EventE
 |---------|----------|------------------|---------------------|
 | `npm run demo` / `make demo` | Node local | Demonstrar DAO x Mapper x Repository e eventos. | `src/interfaces/cli/demo.js`, repos em memoria |
 | `npm run demo:repository:pg` / `make demo-pg` | Node + Postgres | Persistencia real com `pg`, usando o mesmo agregado. | `src/interfaces/cli/demo-postgres.js`, `postgres/*.js` |
-| `npm run demo:observer:rxjs` / `make observer-rxjs` | Node local | Observer -> RxJS. | `src/patterns/observer/RxjsCartStreamDemo.js` |
-| `npm run demo:observer:rabbit` / `make observer-rabbit` | Node + RabbitMQ | Observer -> Pub/Sub broker real. | `src/patterns/observer/RabbitMQObserverDemo.js` |
+| `npm run demo:mapper:pg` / `make demo-mapper-pg` | Node + Postgres | Demonstra Data Mapper + DAO Postgres sem repository. | `src/interfaces/cli/demo-data-mapper-pg.js`, `CartDataMapper`, `PostgresCartDAO` |
+| `npm run demo:strategy` / `make demo-strategy` | Node local | Compara if/else legado com Strategy no calculo de frete. | `src/interfaces/cli/demo-strategy.js`, `src/patterns/strategy/*` |
+| `npm run demo:observer:rxjs` / `make observer-rxjs` | Node local | Observer -> RxJS. | CLI `src/interfaces/cli/observer-rxjs.js` + `src/patterns/observer/RxjsCartStreamDemo.js` |
+| `npm run demo:observer:rabbit` / `make observer-rabbit` | Node + RabbitMQ | Observer -> Pub/Sub broker real. | CLI `src/interfaces/cli/observer-rabbit.js` + `src/patterns/observer/RabbitMQObserverDemo.js` |
 | `docker compose up --build` / `make docker-up` | Docker | Sobe app, Postgres e RabbitMQ; roda `npm run demo`. | `Dockerfile`, `docker-compose.yml` |
 | `docker compose run --rm app <script>` / `make docker-*` | Docker | Executa qualquer script dentro do container, reaproveitando os servicos (env `DATABASE_URL`, `RABBITMQ_URL`). | Mesmo que acima |
 

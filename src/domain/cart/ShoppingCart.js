@@ -29,16 +29,19 @@ export class ShoppingCart {
   addItem(rawItem) {
     const item = rawItem instanceof CartItem ? rawItem : new CartItem(rawItem);
 
+    // Soma antecipada para impedir estouro de quantidade antes de mutar o array
     const nextTotalUnits = this.totalUnits + item.quantity;
     if (nextTotalUnits > MAX_ITEMS) {
       throw new Error("Nao e permitido mais que 50 unidades no carrinho.");
     }
 
+    // Valida credito do cliente como parte das invariantes do agregado
     const nextTotalValue = this.totalValue + item.total;
     if (nextTotalValue > this.creditLimit) {
       throw new Error("Carrinho nao pode ultrapassar o limite de credito do cliente.");
     }
 
+    // Reusa um item existente quando o produto ja estava no carrinho
     const existingIndex = this.items.findIndex((existing) => existing.productId === item.productId);
     if (existingIndex >= 0) {
       const updated = this.items[existingIndex].mergeQuantity(item.quantity);

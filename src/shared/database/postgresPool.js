@@ -9,6 +9,7 @@ export function getPostgresPool(options = {}) {
       ssl = process.env.PGSSL === "true" ? { rejectUnauthorized: false } : false,
     } = options;
 
+    // Singleton simples para reaproveitar conexoes em CLI e demos
     pool = new Pool({
       connectionString,
       ssl,
