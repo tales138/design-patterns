@@ -191,20 +191,10 @@ async function main() {
       sms: new RabbitNotificationClient(channel, { queue: NOTIFICATION_QUEUE, channelType: "sms" }),
       push: new RabbitNotificationClient(channel, { queue: NOTIFICATION_QUEUE, channelType: "push" }),
     });
+    
     notifier.send(order);
 
     domainEvents.forEach((event) => channel.sendToQueue(CART_EVENTS_QUEUE, Buffer.from(JSON.stringify(event))));
-
-    const notificationMessages = [];
-    let msg;
-    while ((msg = await channel.get(NOTIFICATION_QUEUE, { noAck: true }))) {
-      notificationMessages.push(JSON.parse(msg.content.toString()));
-    }
-
-    const eventMessages = [];
-    while ((msg = await channel.get(CART_EVENTS_QUEUE, { noAck: true }))) {
-      eventMessages.push(JSON.parse(msg.content.toString()));
-    }
 
 
     console.log("\nDemo completo finalizado com sucesso.");

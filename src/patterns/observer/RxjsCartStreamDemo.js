@@ -33,7 +33,7 @@ export function createCartEventStream() {
 export function runRxjsDemo() {
   const { subject, shippingStream, billingStream } = createCartEventStream();
 
-  // Logs simulam observers separados consumindo o mesmo Subject
+
   const shippingSubscription = shippingStream.subscribe((event) => {
     console.log("[RxJS][Shipping]", event.message);
   });
