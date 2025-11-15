@@ -25,13 +25,15 @@ export function createCartEventStream() {
     })),
   );
 
-  return { subject, shippingStream, billingStream };
+  const rawStream = subject.asObservable();
+
+  return { subject, shippingStream, billingStream, rawStream };
 }
 
 export function runRxjsDemo() {
   const { subject, shippingStream, billingStream } = createCartEventStream();
 
-  // Logs simulam observers separados consumindo o mesmo Subject
+
   const shippingSubscription = shippingStream.subscribe((event) => {
     console.log("[RxJS][Shipping]", event.message);
   });

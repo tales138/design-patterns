@@ -16,6 +16,7 @@ import { getRabbitMQChannel, closeRabbitMQ } from "../../shared/messaging/rabbit
 
 const NOTIFICATION_QUEUE = process.env.ORDER_NOTIFICATION_QUEUE ?? "order-notifications";
 const CART_EVENTS_QUEUE = process.env.CART_EVENTS_QUEUE ?? "cart-events";
+const RXJS_LOG_QUEUE = process.env.RXJS_LOG_QUEUE ?? "rxjs-logs";
 
 // Utilidades simples para interagir com o usuario e garantir defaults
 async function askYesNo(rl, question, defaultValue = false) {
@@ -65,19 +66,6 @@ async function buildRepository(usePostgres) {
 }
 
 // Pergunta repetidamente os itens do pedido ate o usuario parar
-async function collectItems(rl) {
-  const items = [];
-  let addMore = true;
-  while (addMore) {
-    const productId = await askString(rl, "Produto (ex.: espresso)", `item-${items.length + 1}`);
-    const quantity = await askNumber(rl, "Quantidade", 1);
-    const unitPrice = await askNumber(rl, "Preco unitario", 10);
-    items.push({ productId, quantity, unitPrice });
-    addMore = await askYesNo(rl, "Adicionar outro item?", false);
-  }
-  return items;
-}
-
 async function main() {
   const rl = readline.createInterface({ input, output });
   let cleanupRepo = async () => {};
@@ -91,23 +79,79 @@ async function main() {
     const destination = await askString(rl, "Destino (domestic/international)", "domestic");
     const priority = destination === "international" ? await askString(rl, "Prioridade (economy/express)", "economy") : undefined;
 
-    const items = await collectItems(rl);
-    if (!items.length) {
-      console.log("Nenhum item informado. Abortando demo.");
-      return;
-    }
-
     const cartId = `cli-cart-${Date.now()}`;
     const { repository, cleanup } = await buildRepository(usePostgres);
     cleanupRepo = cleanup;
     const addItemToCart = new AddItemToCart(repository);
 
-    for (const item of items) {
-      await addItemToCart.execute({
+    const channel = await getRabbitMQChannel();
+    await channel.assertQueue(NOTIFICATION_QUEUE, { durable: false });
+    await channel.assertQueue(CART_EVENTS_QUEUE, { durable: false });
+    await channel.assertQueue(RXJS_LOG_QUEUE, { durable: false });
+    await channel.purgeQueue(NOTIFICATION_QUEUE);
+    await channel.purgeQueue(CART_EVENTS_QUEUE);
+    await channel.purgeQueue(RXJS_LOG_QUEUE);
+
+    const rxLogs = [];
+    let rxLogSequence = 0;
+    const emitRxLog = (line) => {
+      rxLogSequence += 1;
+      rxLogs.push(line);
+      channel.sendToQueue(
+        RXJS_LOG_QUEUE,
+        Buffer.from(
+          JSON.stringify({
+            log: line,
+            emittedAt: new Date().toISOString(),
+            sequence: rxLogSequence,
+          }),
+        ),
+      );
+    };
+    const { subject, shippingStream, billingStream, rawStream } = createCartEventStream();
+    const rawSubscription = rawStream.subscribe((event) =>
+      emitRxLog(`[RxJS][Timeline][${event.type}] ${JSON.stringify(event.payload ?? {})}`),
+    );
+    const shippingSubscription = shippingStream.subscribe((event) => emitRxLog(`[RxJS][Shipping] ${event.message}`));
+    const billingSubscription = billingStream.subscribe((event) => emitRxLog(`[RxJS][Billing] ${event.message}`));
+
+    subject.next({
+      type: "ORDER_STARTED",
+      payload: { cartId, customerEmail, startedAt: new Date().toISOString() },
+    });
+
+    const collectedEvents = [];
+    let itemIndex = 0;
+    let addMore = true;
+    while (addMore) {
+      const productId = await askString(rl, "Produto (ex.: espresso)", `item-${itemIndex + 1}`);
+      const quantity = await askNumber(rl, "Quantidade", 1);
+      const unitPrice = await askNumber(rl, "Preco unitario", 10);
+      const item = { productId, quantity, unitPrice };
+
+      const updatedCart = await addItemToCart.execute({
         cartId,
         customerId: customerEmail,
         item,
       });
+      const itemEvents = updatedCart.pullDomainEvents();
+      collectedEvents.push(...itemEvents);
+      if (itemEvents.length) {
+        itemEvents.map(toObserverEvent).forEach((event) => subject.next(event));
+      } else {
+        subject.next({
+          type: "ITEM_REGISTERED",
+          payload: { cartId, productId, quantity, unitPrice, note: "Sem eventos especificos" },
+        });
+      }
+
+      itemIndex += 1;
+      addMore = await askYesNo(rl, "Adicionar outro item?", false);
+    }
+
+    if (itemIndex === 0) {
+      console.log("Nenhum item informado. Abortando demo.");
+      return;
     }
 
     const cart = await repository.getById(cartId, customerEmail);
@@ -134,52 +178,24 @@ async function main() {
     console.log("\nResumo do pedido:");
     console.log(`Itens: ${cart.totalUnits} | Subtotal: ${cart.totalValue.toFixed(2)} | Frete (Strategy): ${shippingCost.toFixed(2)}`);
 
-    const domainEvents = cart.pullDomainEvents();
+    const domainEvents = collectedEvents;
     console.log(`Eventos de dominio gerados: ${domainEvents.length}`);
 
-    const rxLogs = [];
-    const { subject, shippingStream, billingStream } = createCartEventStream();
-    const shippingSubscription = shippingStream.subscribe((event) => rxLogs.push(`[RxJS][Shipping] ${event.message}`));
-    const billingSubscription = billingStream.subscribe((event) => rxLogs.push(`[RxJS][Billing] ${event.message}`));
-    domainEvents.forEach((event) => subject.next(event));
+    rawSubscription.unsubscribe();
     shippingSubscription.unsubscribe();
     billingSubscription.unsubscribe();
 
     // RabbitMQ reproduz o Observer generalizado e o Decorator real
-    const channel = await getRabbitMQChannel();
-    await channel.assertQueue(NOTIFICATION_QUEUE, { durable: false });
-    await channel.assertQueue(CART_EVENTS_QUEUE, { durable: false });
-    await channel.purgeQueue(NOTIFICATION_QUEUE);
-    await channel.purgeQueue(CART_EVENTS_QUEUE);
-
     const notifier = buildNotifier({
       email: new RabbitNotificationClient(channel, { queue: NOTIFICATION_QUEUE, channelType: "email" }),
       sms: new RabbitNotificationClient(channel, { queue: NOTIFICATION_QUEUE, channelType: "sms" }),
       push: new RabbitNotificationClient(channel, { queue: NOTIFICATION_QUEUE, channelType: "push" }),
     });
+    
     notifier.send(order);
 
     domainEvents.forEach((event) => channel.sendToQueue(CART_EVENTS_QUEUE, Buffer.from(JSON.stringify(event))));
 
-    const notificationMessages = [];
-    let msg;
-    while ((msg = await channel.get(NOTIFICATION_QUEUE, { noAck: true }))) {
-      notificationMessages.push(JSON.parse(msg.content.toString()));
-    }
-
-    const eventMessages = [];
-    while ((msg = await channel.get(CART_EVENTS_QUEUE, { noAck: true }))) {
-      eventMessages.push(JSON.parse(msg.content.toString()));
-    }
-
-    console.log("\n=== Logs RxJS ===");
-    rxLogs.forEach((logLine) => console.log(logLine));
-
-    console.log("\n=== Mensagens publicadas no RabbitMQ (decorator) ===");
-    notificationMessages.forEach((message) => console.log(message));
-
-    console.log("\n=== Eventos publicados no RabbitMQ (observer -> cart events) ===");
-    eventMessages.forEach((message) => console.log(message));
 
     console.log("\nDemo completo finalizado com sucesso.");
   } catch (error) {
@@ -194,3 +210,11 @@ async function main() {
 }
 
 main();
+function toObserverEvent(domainEvent) {
+  switch (domainEvent.name) {
+    case "CartItemAdded":
+      return { type: "ITEM_ADDED", payload: domainEvent.payload };
+    default:
+      return { type: domainEvent.name, payload: domainEvent.payload };
+  }
+}
